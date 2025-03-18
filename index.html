@@ -42,30 +42,29 @@
 
     // 🔹 Function to Load Attendance from Firebase (LIVE)
     function loadAttendance() {
-        const table = document.getElementById("attendanceTable");
-        const tbody = table.getElementsByTagName("tbody")[0];
-        tbody.innerHTML = ""; // Clear previous data
+    const table = document.getElementById("attendanceTable");
+    const tbody = table.getElementsByTagName("tbody")[0];
+    tbody.innerHTML = ""; // Clear previous data
 
-        const attendanceRef = ref(db, "attendance");
+    const attendanceRef = ref(db, "attendance");
 
-        onValue(attendanceRef, (snapshot) => {
-            tbody.innerHTML = "";  // Clear table before updating
-            if (snapshot.exists()) {
-                snapshot.forEach((childSnapshot) => {
-                    const data = childSnapshot.val();
-                    if (data.name && data.timestamp) {
-                        let row = tbody.insertRow();
-                        let cell1 = row.insertCell(0);
-                        let cell2 = row.insertCell(1);
-                        cell1.textContent = data.name.replace(/["']/g, "");  // Remove extra quotes
-                        cell2.textContent = data.timestamp.replace(/["']/g, "");
-                    }
-                });
-            } else {
-                tbody.innerHTML = "<tr><td colspan='2'>No attendance records found.</td></tr>";
-            }
-        });
-    }
+    onValue(attendanceRef, (snapshot) => {
+        tbody.innerHTML = "";  // Clear table before updating
+        if (snapshot.exists()) {
+            let rows = [];
+            snapshot.forEach((childSnapshot) => {
+                const data = childSnapshot.val();
+                if (data.name && data.timestamp) {
+                    let row = `<tr><td>${data.name.replace(/["']/g, "")}</td>
+                               <td>${data.timestamp.replace(/["']/g, "")}</td></tr>`;
+                    rows.unshift(row);  // Insert at the beginning
+                }
+            });
+            tbody.innerHTML = rows.join("");  // Update table with reversed order
+        } else {
+            tbody.innerHTML = "<tr><td colspan='2'>No attendance records found.</td></tr>";
+        }
+    });
 
     // 🔹 Function to Stop the Buzzer
     window.stopBuzzer = function () {
