@@ -56,20 +56,28 @@
 
         // 🔹 Load Attendance Data from Firebase in Real-Time
         function loadAttendance() {
-            const tbody = document.getElementById("attendanceTableBody");
-            tbody.innerHTML = ""; // Clear previous data
+    const table = document.getElementById("attendanceTable");
+    const tbody = table.getElementsByTagName("tbody")[0];
+    tbody.innerHTML = ""; // Clear previous data
 
-            db.ref("attendance").on("child_added", (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
+    db.ref("attendance").on("value", (snapshot) => {
+        tbody.innerHTML = "";  // Clear table before updating
+        if (snapshot.exists()) {
+            snapshot.forEach((childSnapshot) => {
+                const data = childSnapshot.val();
+                if (data.name && data.timestamp) {
                     let row = tbody.insertRow();
                     let cell1 = row.insertCell(0);
                     let cell2 = row.insertCell(1);
-                    cell1.textContent = data.name || "Unknown";
-                    cell2.textContent = data.timestamp || "N/A";
+                    cell1.textContent = data.name.replace(/"/g, "");  // Remove double quotes
+                    cell2.textContent = data.timestamp.replace(/"/g, "");
                 }
             });
+        } else {
+            tbody.innerHTML = "<tr><td colspan='2'>No attendance records found.</td></tr>";
         }
+    });
+}
 
         // 🔹 Filter table by name or timestamp
         function filterTable() {
