@@ -59,11 +59,24 @@
                         }
                     });
                     tbody.innerHTML = rows.join("");  // Update table
+                    filterTable(); // 🔎 Apply filter after loading
                 } else {
                     tbody.innerHTML = "<tr><td colspan='2'>No attendance records found.</td></tr>";
                 }
             });
         }
+
+        // 🔎 **Function to Filter Attendance Table**
+        window.filterTable = function () {
+            let input = document.getElementById("search").value.toLowerCase();
+            let rows = document.querySelectorAll("#attendanceTable tbody tr");
+
+            rows.forEach(row => {
+                let name = row.cells[0].textContent.toLowerCase();
+                let timestamp = row.cells[1].textContent.toLowerCase();
+                row.style.display = (name.includes(input) || timestamp.includes(input)) ? "" : "none";
+            });
+        };
 
         // 🔹 Function to Stop the Buzzer
         window.stopBuzzer = function () {
@@ -85,7 +98,7 @@
         };
 
         // ✅ Run `loadAttendance` on page load
-        window.onload = function() {
+        window.onload = function () {
             loadAttendance();
         };
 
@@ -96,7 +109,7 @@
 </head>
 <body>
     <h2>Attendance Records</h2>
-    <input type="text" id="search" placeholder="Search by name or date...">
+    <input type="text" id="search" placeholder="Search by name or date..." onkeyup="filterTable()">
     <br>
     <button onclick="clearAttendance()">Clear Attendance</button>
     <button onclick="stopBuzzer()">Stop Buzzer</button>
