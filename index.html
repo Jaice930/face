@@ -48,7 +48,7 @@
                 db.ref("attendance").remove()  // Delete all attendance records
                     .then(() => {
                         alert("📌 Attendance records cleared!");
-                        loadAttendance();  // Refresh table
+                        document.getElementById("attendanceTableBody").innerHTML = ""; // Clear UI table
                     })
                     .catch(error => console.error("Error:", error));
             }
@@ -56,37 +56,42 @@
 
         // 🔹 Load Attendance Data from Firebase in Real-Time
         function loadAttendance() {
-            const table = document.getElementById("attendanceTable");
-            const tbody = table.getElementsByTagName("tbody")[0];
+            const tbody = document.getElementById("attendanceTableBody");
             tbody.innerHTML = ""; // Clear previous data
 
-            db.ref("attendance").on("value", (snapshot) => {
-                tbody.innerHTML = "";  // Clear table before updating
-                if (snapshot.exists()) {
-                    snapshot.forEach((childSnapshot) => {
-                        const data = childSnapshot.val();
-                        let row = tbody.insertRow();
-                        let cell1 = row.insertCell(0);
-                        let cell2 = row.insertCell(1);
-                        cell1.textContent = data.name;
-                        cell2.textContent = data.timestamp;
-                    });
-                } else {
-                    tbody.innerHTML = "<tr><td colspan='2'>No attendance records found.</td></tr>";
+            db.ref("attendance").on("child_added", (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    let row = tbody.insertRow();
+                    let cell1 = row.insertCell(0);
+                    let cell2 = row.insertCell(1);
+                    cell1.textContent = data.name || "Unknown";
+                    cell2.textContent = data.timestamp || "N/A";
                 }
             });
+        }
+
+        // 🔹 Filter table by name or timestamp
+        function filterTable() {
+            let input = document.getElementById("search").value.toLowerCase();
+            let rows = document.getElementById("attendanceTableBody").getElementsByTagName("tr");
+
+            for (let row of rows) {
+                let name = row.cells[0].textContent.toLowerCase();
+                let timestamp = row.cells[1].textContent.toLowerCase();
+                row.style.display = (name.includes(input) || timestamp.includes(input)) ? "" : "none";
+            }
         }
 
         // 🔹 Run `loadAttendance` on page load
         window.onload = function() {
             loadAttendance();
-            setInterval(loadAttendance, 5000);  // Auto-refresh every 5 seconds
         };
     </script>
 </head>
 <body>
     <h2>Attendance Records</h2>
-    <input type="text" id="search" placeholder="Search by name or date...">
+    <input type="text" id="search" onkeyup="filterTable()" placeholder="Search by name or date...">
     <br>
     <button onclick="clearAttendance()">Clear Attendance</button>
     <button onclick="stopBuzzer()">Stop Buzzer</button>
@@ -98,7 +103,7 @@
                 <th>Timestamp</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="attendanceTableBody">
             <!-- Data from Firebase will be inserted here -->
         </tbody>
     </table>
