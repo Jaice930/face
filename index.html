@@ -32,7 +32,7 @@
         messagingSenderId: "129176898481",
         appId: "1:129176898481:web:deddfa3cd04fa5330a0b90"
     };
-        
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -57,17 +57,16 @@
 
     // 🔹 Fetch all attendance records from Firebase
     function loadAttendance() {
-        const table = document.getElementById("attendanceTable");
-        const tbody = table.getElementsByTagName("tbody")[0];
-        tbody.innerHTML = ""; // Clear previous data
+        const tableBody = document.getElementById("attendanceTableBody");
+        tableBody.innerHTML = ""; // Clear previous data
 
         db.ref("attendance").on("value", (snapshot) => {
-            tbody.innerHTML = "";  // Clear table before updating
+            tableBody.innerHTML = "";  // Clear table before updating
             if (snapshot.exists()) {
                 snapshot.forEach((childSnapshot) => {
                     const data = childSnapshot.val();
                     if (data.name && data.timestamp) {
-                        let row = tbody.insertRow();
+                        let row = tableBody.insertRow();
                         let cell1 = row.insertCell(0);
                         let cell2 = row.insertCell(1);
                         cell1.textContent = data.name.replace(/["']/g, "");  // Remove extra quotes
@@ -75,9 +74,21 @@
                     }
                 });
             } else {
-                tbody.innerHTML = "<tr><td colspan='2'>No attendance records found.</td></tr>";
+                tableBody.innerHTML = "<tr><td colspan='2'>No attendance records found.</td></tr>";
             }
         });
+    }
+
+    // 🔹 Filter table based on input
+    function filterTable() {
+        let input = document.getElementById("search").value.toLowerCase();
+        let rows = document.getElementById("attendanceTableBody").getElementsByTagName("tr");
+
+        for (let row of rows) {
+            let name = row.cells[0].textContent.toLowerCase();
+            let timestamp = row.cells[1].textContent.toLowerCase();
+            row.style.display = (name.includes(input) || timestamp.includes(input)) ? "" : "none";
+        }
     }
 
     // 🔹 Run `loadAttendance` on page load
