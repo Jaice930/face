@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Records</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; background-color: #f4f4f4; }
+        h2, h3 { color: #333; }
+        input, select, button { padding: 10px; margin: 10px; width: 60%; }
+        table { width: 80%; margin: auto; border-collapse: collapse; background: white; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }
+        th, td { padding: 10px; border: 1px solid black; text-align: left; }
+        th { background-color: #4CAF50; color: white; cursor: pointer; }
+        button { background-color: red; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: darkred; }
+        .known-persons { width: 50%; margin: auto; padding: 10px; background: white; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); border-radius: 8px; }
+        ul { list-style-type: none; padding: 0; }
+        li { padding: 5px; border-bottom: 1px solid #ddd; }
+    </style>
+
+    <script>
+        // 🔥 Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAIbxyQSeg7-gH46KURMSt_bsyzyhq3g7Y",
+            authDomain: "face-26e62.firebaseapp.com",
+            databaseURL: "https://face-26e62-default-rtdb.firebaseio.com",
+            projectId: "face-26e62",
+            storageBucket: "face-26e62.firebasestorage.app",
+            messagingSenderId: "129176898481",
+            appId: "1:129176898481:web:deddfa3cd04fa5330a0b90"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 🔹 Stop the buzzer by updating Firebase
+        function stopBuzzer() {
+            db.ref("buzzer").set({ status: "off" })  // Store stop command in Firebase
+                .then(() => alert("🔕 Buzzer Stopped!"))
+                .catch(error => console.error("Error:", error));
+        }
+
+        // 🔹 Clear Attendance Records from Firebase
+        function clearAttendance() {
+            if (confirm("Are you sure you want to clear all attendance records?")) {
+                db.ref("attendance").remove()  // Delete all attendance records
+                    .then(() => {
+                        alert("📌 Attendance records cleared!");
+                        loadAttendance();  // Refresh table
+                    })
+                    .catch(error => console.error("Error:", error));
+            }
+        }
+
+        // 🔹 Load Attendance Data from Firebase in Real-Time
+        function loadAttendance() {
+            const table = document.getElementById("attendanceTable");
+            const tbody = table.getElementsByTagName("tbody")[0];
+            tbody.innerHTML = ""; // Clear previous data
+
+            db.ref("attendance").on("value", (snapshot) => {
+                tbody.innerHTML = "";  // Clear table before updating
+                if (snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => {
+                        const data = childSnapshot.val();
+                        let row = tbody.insertRow();
+                        let cell1 = row.insertCell(0);
+                        let cell2 = row.insertCell(1);
+                        cell1.textContent = data.name;
+                        cell2.textContent = data.timestamp;
+                    });
+                } else {
+                    tbody.innerHTML = "<tr><td colspan='2'>No attendance records found.</td></tr>";
+                }
+            });
+        }
+
+        // 🔹 Run `loadAttendance` on page load
+        window.onload = function() {
+            loadAttendance();
+            setInterval(loadAttendance, 5000);  // Auto-refresh every 5 seconds
+        };
+    </script>
+</head>
+<body>
+    <h2>Attendance Records</h2>
+    <input type="text" id="search" placeholder="Search by name or date...">
+    <br>
+    <button onclick="clearAttendance()">Clear Attendance</button>
+    <button onclick="stopBuzzer()">Stop Buzzer</button>
+
+    <table id="attendanceTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data from Firebase will be inserted here -->
+        </tbody>
+    </table>
+
+    <h3>Known Persons</h3>
+    <div class="known-persons">
+        <ul>
+            <li>Barack Obama</li>
+            <li>Elon Musk</li>
+            <li>Joshua Garcia</li>
+            <li>Karina</li>
+            <li>Sana</li>
+            <li>Sir Esmon Tonio</li>
+        </ul>
+    </div>
+</body>
+</html>
